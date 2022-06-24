@@ -12,66 +12,86 @@ from helper import vec
 
 pygame.init()
 
+## Game variables and constants :
+# Colors :
 colors = {color:pygame.Color(color.upper()) for color in ["black", "white", "red", "green", "blue", "yellow"]}
 for color in colors:
     globals()[color] = colors[color]
 
-def draw_square(screen, pos=(0, 0), size=20, color=red):
-    rct = pygame.draw.rect(screen, color, [*pos, size, size])
-    return rct
+# Size of the bloc :
+blocsize = 20
 
+# Pygame's window initialization :
 screen = pygame.display.set_mode((600, 600))
 pygame.display.set_caption("Tetris Game")
-gscboard = tetris.boardMatrix()
-bgnboard = tetris.boardMatrix(size=(5, 5))
-## Game Screen:
+
+# Pygame's clock initialization :
+clock = pygame.time.Clock()
+
+# The width of the game zone border
 border_width = 5
-gscpos = (1/2) * (vec(*screen.get_size()) - 20 * vec(*gscboard.size))
-gscwh = (21 * vec(*gscboard.size) + vec(2, 2) + vec(border_width, border_width))
-gamescreen = (screen, red,
-              [*gscpos, *(21 * vec(*gscboard.size) + vec(2, 2) + vec(border_width, border_width))], border_width)
+
+# Game Screen:
+gscboard = tetris.boardMatrix()
+gscpos = (1/2)*(vec(*screen.get_size()) - blocsize*vec(*gscboard.size))
+gscwh = ((blocsize+1)*vec(*gscboard.size) + vec(border_width + 2, border_width + 2))
+gamescreen = (screen, red, [*gscpos, *gscwh], border_width)
 
 gsccoef = int(border_width//2) + 2
 gscposes = []
 for j in range(gscboard.size[1]):
     lposes = []
     for i in range(gscboard.size[0]):
-        pos = (vec(*gscpos) + vec(gsccoef, gsccoef) + 21*vec(i, j))
+        pos = (vec(*gscpos) + vec(gsccoef, gsccoef) + (blocsize+1)*vec(i, j))
         lposes.append(pos)
     gscposes.append(lposes)
 
-## Bloc Generator:
-bgnpos = vec(*gscpos) + 21*vec(gscboard.size[0], 0) + vec(border_width + 22, 0)
-bgnwh = 107 + border_width
+spawned = []
+
+# Bloc Generator:
+bgnboard = tetris.boardMatrix(size=(5, 5))
+bgnpos = vec(*gscpos) + (blocsize+1)*vec(gscboard.size[0], 0) + vec(border_width + blocsize + 2, 0)
+bgnwh = (blocsize+1)*bgnboard.size[0] + 2*border_width
 blocgenerator = (screen, red, [*bgnpos, bgnwh, bgnwh], border_width)
-bgncenter = vec(*bgnpos) + vec((border_width + 1)/2 + 43,
-                            (border_width + 1)/2 + 43)
+bgncenter = vec(*bgnpos) + vec((border_width + 1)/2 + 2*(blocsize+1) + 1,
+                            (border_width + 1)/2 + 2*(blocsize+1) + 1)
 
 bgncoef = int(border_width//2) + 2
 bgnposes = []
 for j in range(bgnboard.size[1]):
     lposes = []
     for i in range(bgnboard.size[0]):
-        pos = (vec(*bgnpos) + vec(bgncoef, bgncoef) + 21*vec(i, j))
+        pos = (vec(*bgnpos) + vec(bgncoef, bgncoef) + (blocsize+1)*vec(i, j))
         lposes.append(pos)
     bgnposes.append(lposes)
 
-## Score and Level:
+generated = []
+
+# Score and Level:
+maxlevel = 30
 level = 1
 score = 0
 
-sclvpos = vec(*gscpos) - vec(21*5 + 2*border_width + 22 + 30, 0)
+sclvpos = vec(*gscpos) - vec((blocsize+1)*6 + 2*border_width + blocsize, 0)
 lvpos = vec(*sclvpos) + vec(border_width, 25)
 scpos = vec(*lvpos) + vec(0, 40)
-sclvrect = (screen, red, [*sclvpos, 21*5 + 2*border_width + 30, 21*5 + 2*border_width], border_width)
+sclvrect = (screen, red, [*sclvpos, (blocsize+1)*6 + 2*border_width, (blocsize+1)*5 + 2*border_width], border_width)
 sclvfont = pygame.font.SysFont("Courier", 25, bold=True)
 
-spawned = []
-generated = []
+# First screen main coordinates :
+tfscpos, pfscpos, ifscpos = (0, 0), (0, 0), (0, 0)
+
+# Arrow images for instructions :
+istrsc_imgs = ["up_arrow", "right_arrow", "left_arrow", "k_return"]
+for i in range(len(istrsc_imgs)):
+    istrsc_imgs[i] = pygame.image.load(f"{istrsc_imgs[i]}.png")
+
+## Game functions :
+def draw_square(screen, pos=(0, 0), size=blocsize, color=red):
+    rct = pygame.draw.rect(screen, color, [*pos, size, size])
+    return rct
 
 def update_board(board):
-    #screen.fill(black)
-    #draw_screen()
     if board == bgnboard:
         mode = "bgn"
     else:
@@ -79,7 +99,6 @@ def update_board(board):
     for ind in board.occuped_inds():
         _pos = conv_ind2pos(ind, mode=mode)
         draw_square(screen, pos=_pos, color=blue)
-    #pygame.display.flip()
 
 def conv_ind2pos(ind, mode="gsc"):
     return eval(f"{mode}poses[ind[1]][ind[0]]")
@@ -115,8 +134,6 @@ def move_bloc(bloc):
     if bloc in spawned:
         spawned.remove(bloc)
 
-clock = pygame.time.Clock()
-
 def draw_screen():
     global score
     pygame.draw.rect(*gamescreen)
@@ -128,8 +145,6 @@ def draw_screen():
     sctext = sclvfont.render(f"Score:{score}", False, white)
     screen.blit(lvtext, lvpos)
     screen.blit(sctext, scpos)
-
-tfscpos, pfscpos, ifscpos = (0, 0), (0, 0), (0, 0)
 
 def draw_firstscreen(mode=None):
     global tfscpos, pfscpos, ifscpos
@@ -188,10 +203,6 @@ def draw_interscreen():
     screen.blit(isttext, istpos)
     screen.blit(_isttext, _istpos)
 
-istrsc_imgs = ["up_arrow", "right_arrow", "left_arrow", "k_return"]
-for i in range(len(istrsc_imgs)):
-    istrsc_imgs[i] = pygame.image.load(f"{istrsc_imgs[i]}.png")
-
 def draw_instrscreen():
     insfont = pygame.font.SysFont("Courier", 25, bold=True)
     insposes = [(100, 100), (100, 200), (100, 300), (100, 400)]
@@ -205,7 +216,26 @@ def draw_instrscreen():
         screen.blit(ins, insposes[i])
 
     button_effect("Back", (200, 500))
-        
+
+def stopplay():
+    global p
+    p = ~p
+
+def draw_winscreen():
+    pygame.draw.rect(*gamescreen)
+    pygame.draw.rect(*blocgenerator)    
+    pygame.draw.rect(*sclvrect)
+    for line in gscposes:
+        for _pos in line:
+            draw_square(screen, pos=_pos, color=random.choice(list(colors.values())))
+
+    winwidth = 200
+    winpos = vec((screen.get_size()[0] - winwidth)/2, border_width)
+    winfont = pygame.font.SysFont("Courier", 50, bold=True)
+    win = winfont.render("YOU WIN", False, white)
+    screen.blit(win, winpos)
+
+## Initialization variables :
 moved_rl = False
 interscreen = False
 firstscreen = True
@@ -213,10 +243,28 @@ selected = "play"
 instrscreen = False
 Gscreen = False
 over = False
-
 i = 0
 first_bloc = 0
+p = 0
+
+## Main loop :
 while True:
+
+    if level > maxlevel:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        screen.fill(black)
+        draw_winscreen()
+        pygame.display.flip()
+        continue
+    
+    if p:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                stopplay()
+        continue
     
     if over:
         gofont = pygame.font.SysFont("Courier", 47, bold=True)
@@ -225,7 +273,7 @@ while True:
         pygame.display.flip()
         time.sleep(2)
         break
-        
+
     screen.fill(black)
     
     if firstscreen:
@@ -263,7 +311,7 @@ while True:
                 
     elif Gscreen:
         draw_screen()
-        if i % (40-level) == 0:
+        if i % (maxlevel-level+10) == 0:
             if spawned == []:
                 if not first_bloc:
                 	generate_bloc()
@@ -298,6 +346,8 @@ while True:
                     moved_rl = True
                 if event.key == pygame.K_RETURN:
                     gscboard.projection(current_bloc)
+                if event.key == pygame.K_SPACE:
+                    stopplay()
         if score >= 100:
             interscreen = True
             level += 1
@@ -305,9 +355,11 @@ while True:
             spawned = []
             generated = []
             score = 0
+
     pygame.display.flip()
     clock.tick(60)
     i += 1
 
+## The end of the game :
 pygame.quit()
 sys.exit(0)
