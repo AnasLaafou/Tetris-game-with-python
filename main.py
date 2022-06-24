@@ -254,7 +254,7 @@ while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
+                sys.exit(0)
         screen.fill(black)
         draw_winscreen()
         pygame.display.flip()
@@ -279,7 +279,10 @@ while True:
     if firstscreen:
         draw_firstscreen(mode=f"effect {selected}")
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP or event.key == pygame.K_w:
                     button_effect("PLAY", pfscpos)
                     selected = "play"
@@ -297,7 +300,10 @@ while True:
     elif interscreen:
         draw_interscreen()
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 interscreen = False
                 Gscreen = True
                 first_bloc = 0
@@ -305,7 +311,10 @@ while True:
     elif instrscreen:
         draw_instrscreen()
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit(0)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 instrscreen = False
                 firstscreen = True
                 
