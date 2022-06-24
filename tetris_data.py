@@ -1,4 +1,3 @@
-import Matrices
 import sys
 from helper import vec
 
@@ -59,7 +58,7 @@ class Bloc:
                 self.heading = 0
         
 
-class boardMatrix(Matrices.Matrix):
+class boardMatrix():
 
     def __init__(self, size=(12, 20), data=None):
         global boards
@@ -69,7 +68,6 @@ class boardMatrix(Matrices.Matrix):
         if data is None:
             data = [[0 for j in range(size[0])] for i in range(size[1])]
         self.data = data
-        Matrices.Matrix.__init__(self, data)
         self.size = size
         self.spawn_ind = (int(self.size[0]//2)-(self.size[0]+1)%2, 2)
         boards += [self, ]
@@ -86,7 +84,7 @@ class boardMatrix(Matrices.Matrix):
 
     def isoccuped(self, ind):
         if self.isvalid_index(ind):
-            return self.body[ind[1]][ind[0]] == 1
+            return self.data[ind[1]][ind[0]] == 1
         
     def isborder(self, ind):
         if self.isvalid_index(ind):
@@ -127,7 +125,7 @@ class boardMatrix(Matrices.Matrix):
         if b.successfully_constructed:
             self.blocs.append(b)
             for _ind in b.inds:
-                self.body[_ind[1]][_ind[0]] = 1
+                self.data[_ind[1]][_ind[0]] = 1
         return b
         
     def move(self, b, direc):
@@ -135,9 +133,9 @@ class boardMatrix(Matrices.Matrix):
             return
         n_inds = self.next_inds(b, direc)
         for _ind in b.inds:
-            self.body[_ind[1]][_ind[0]] = 0
+            self.data[_ind[1]][_ind[0]] = 0
         for n_ind in n_inds:
-            self.body[n_ind[1]][n_ind[0]] = 1
+            self.data[n_ind[1]][n_ind[0]] = 1
         b.inds = n_inds
         b.ind = b.inds[0]
 
@@ -153,7 +151,7 @@ class boardMatrix(Matrices.Matrix):
         if bloc not in self.blocs:
             return
         for ind in bloc.inds:
-            self.body[ind[1]][ind[0]] = 0
+            self.data[ind[1]][ind[0]] = 0
         bloc.heading = (bloc.heading + 90) % 360
         orient = eval(f"blocs_ids{bloc.heading}")
         ind = bloc.ind
@@ -165,7 +163,7 @@ class boardMatrix(Matrices.Matrix):
                 break
         bloc.inds = inds
         for ind in bloc.inds:
-            self.body[ind[1]][ind[0]] = 1
+            self.data[ind[1]][ind[0]] = 1
 
     def set_bloc_heading(self, bloc, heading):
         while bloc.heading != heading:
@@ -182,22 +180,22 @@ class boardMatrix(Matrices.Matrix):
         copy.move(copybloc, direc)
         for ind in self.occuped_inds():
             if not copy.isoccuped(ind):
-                copy.body[ind[1]][ind[0]] = 1
+                copy.data[ind[1]][ind[0]] = 1
         for b in copy.blocs:
             copy.move(b, (0, 1))
-        return copy.body == self.body
+        return copy.data == self.data
 
     def clear(self):
         self.blocs = []
-        self.body = self.data = [[0 for j in range(self.size[0])] for i in range(self.size[1])]
+        self.data = [[0 for j in range(self.size[0])] for i in range(self.size[1])]
         
     def evolution(self):
         evo_counter = 0
-        for i in range(len(self.body)):
-            line = self.body[i]
-            if self.body[i] == [1 for _ in range(len(line))]:
-                self.body.remove(self.body[i])
-                self.body.insert(0, [0 for _ in range(len(line))])
+        for i in range(len(self.data)):
+            line = self.data[i]
+            if self.data[i] == [1 for _ in range(len(line))]:
+                self.data.remove(self.data[i])
+                self.data.insert(0, [0 for _ in range(len(line))])
                 evo_counter += 10
         return evo_counter
                 
